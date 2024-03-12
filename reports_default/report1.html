@@ -1,0 +1,762 @@
+<!doctype html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+<script>
+    function plotChart(divId, chartData) {
+        // Convert from stringified html, to valid JSON
+        const chartDetails = JSON.parse(chartData.replace(/&quot;/g,'"'));
+        new Chart(document.getElementById(divId), {
+            type: chartDetails.type,
+            data: {
+                labels: chartDetails.labels,
+                datasets: chartDetails.datasets
+            },
+            options: {
+                legend: { display: chartDetails.legend },
+                title: {
+                    display: true,
+                    text: chartDetails.title
+                }
+            }
+        });
+    }
+</script>
+<html>
+<head>
+    <title>Hyperledger Caliper Report</title>
+    <meta charset="UTF-8"/>
+    <style type="text/css">
+        .left-column {
+            position: fixed;
+            width:20%;
+        }
+        .left-column ul {
+            display: block;
+            padding: 0;
+            list-style: none;
+            border-bottom: 1px solid #d9d9d9;
+            font-size: 14px;
+        }
+        .left-column h2{
+            font-size: 24px;
+            font-weight: 400;
+            margin-block-end: 0.5em;
+        }
+        .left-column h3{
+            font-size: 18px;
+            font-weight: 400;
+            margin-block-end: 0.5em;
+        }
+        .left-column li{
+            margin-left: 10px;
+            margin-bottom: 5px;
+            color: #5e6b73;
+        }
+        .right-column {
+            margin-left: 22%;
+            width:60%;
+        }
+        .right-column table {
+            font-size:11px;
+            color:#333333;
+            border-width: 1px;
+            border-color: #666666;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+        .right-column h2{
+            font-weight: 400;
+        }
+        .right-column h3{
+            font-weight: 400;
+        }
+        .right-column h4 {
+            font-weight: 400;
+            margin-block-end: 0;
+        }
+        .right-column th {
+            border-width: 1px;
+            font-size: small;
+            padding: 8px;
+            border-style: solid;
+            border-color: #666666;
+            background-color: #f2f2f2;
+        }
+        .right-column td {
+            border-width: 1px;
+            font-size: small;
+            padding: 8px;
+            border-style: solid;
+            border-color: #666666;
+            background-color: #ffffff;
+            font-weight: 400;
+        }
+        .tag {
+            margin-bottom: 10px;
+            padding: 5px 10px;
+        }
+        pre {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #f2f2f2;
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            -khtml-border-radius: 5px;
+            overflow:auto;
+            max-height:300px;
+            font-size:12px;
+        }
+        .charting {
+            display:flex;
+            flex-direction:row;
+            flex-wrap: wrap;
+            page-break-inside: auto;
+        }
+        .chart {
+            display:flex;
+            flex:1;
+            max-width: 50%;
+        }
+    </style>
+</head>
+<body style="font-family: IBM Plex Sans; font-weight: 200;">
+    <main>
+        <div class="left-column">
+            <img src="https://hyperledger.github.io/caliper/assets/img/hyperledger_caliper_logo_color.png" style="width:95%;" alt="">
+            <ul>
+                <h3>&nbspBasic information</h3>
+                <li>DLT: &nbsp<span style="font-weight: 500;">fabric</span></li>
+                <li>Name: &nbsp<span style="font-weight: 500;">fixed-asset-test</span></li>
+                <li>Description: &nbsp<span style="font-weight: 500;">This is a test yaml for the existing fixed-asset benchmarks</span></li>
+                <li>Benchmark Rounds: &nbsp<span style="font-weight: 500;">14</span></li>
+                <li><a href="#benchmarkInfo">Details</a></li>
+            </ul>
+            <ul>
+                <h3>&nbspBenchmark results</h3>
+                <li><a href="#benchmarksummary">Summary</a></li>
+                    <li><a href="#empty-contract-evaluate">empty-contract-evaluate</a></li>
+                    <li><a href="#empty-contract-submit">empty-contract-submit</a></li>
+                    <li><a href="#create-asset-1000">create-asset-1000</a></li>
+                    <li><a href="#get-asset-evaluate-100">get-asset-evaluate-100</a></li>
+                    <li><a href="#get-asset-submit-200">get-asset-submit-200</a></li>
+                    <li><a href="#rich-query-evaluate">rich-query-evaluate</a></li>
+                    <li><a href="#rich-query-submit">rich-query-submit</a></li>
+                    <li><a href="#range-query-evaluate">range-query-evaluate</a></li>
+                    <li><a href="#range-query-submit">range-query-submit</a></li>
+                    <li><a href="#read-write-assets-previously-read-100">read-write-assets-previously-read-100</a></li>
+                    <li><a href="#read-write-assets-not-previously-read-100">read-write-assets-not-previously-read-100</a></li>
+                    <li><a href="#read-write-assets-random-100">read-write-assets-random-100</a></li>
+                    <li><a href="#delete-asset-100">delete-asset-100</a></li>
+                    <li><a href="#delete-asset-batch-10-100">delete-asset-batch-10-100</a></li>
+            </ul>
+            <ul>
+                <h3>&nbspSystem under test</h3>
+                <li><a href="#sutdetails">Details</a></li>
+            </ul>
+        </div>
+
+        <div class="right-column">
+            <h1 style="padding-top: 3em; font-weight: 500;">Caliper report</h1>
+            <div style="border-bottom: 1px solid #d9d9d9; margin-bottom: 10px;" id="benchmarksummary">
+                <table style="min-width: 100%;">
+                    <h3>Summary of performance metrics</h3>
+                    <tr>
+                         <th>Name</th> <th>Succ</th> <th>Fail</th> <th>Send Rate (TPS)</th> <th>Max Latency (s)</th> <th>Min Latency (s)</th> <th>Avg Latency (s)</th> <th>Throughput (TPS)</th>
+                    </tr>
+
+                    <tr>
+                         <td>empty-contract-evaluate</td> <td>42</td> <td>0</td> <td>2.1</td> <td>0.03</td> <td>0.00</td> <td>0.01</td> <td>2.1</td>
+                    </tr>
+                    <tr>
+                         <td>empty-contract-submit</td> <td>42</td> <td>0</td> <td>2.1</td> <td>2.10</td> <td>0.07</td> <td>1.27</td> <td>1.9</td>
+                    </tr>
+                    <tr>
+                         <td>create-asset-1000</td> <td>42</td> <td>0</td> <td>2.1</td> <td>2.12</td> <td>0.09</td> <td>1.34</td> <td>2.0</td>
+                    </tr>
+                    <tr>
+                         <td>get-asset-evaluate-100</td> <td>42</td> <td>0</td> <td>2.1</td> <td>0.03</td> <td>0.00</td> <td>0.02</td> <td>2.1</td>
+                    </tr>
+                    <tr>
+                         <td>get-asset-submit-200</td> <td>42</td> <td>0</td> <td>2.1</td> <td>2.11</td> <td>0.09</td> <td>1.33</td> <td>1.9</td>
+                    </tr>
+                    <tr>
+                         <td>rich-query-evaluate</td> <td>42</td> <td>0</td> <td>2.1</td> <td>0.05</td> <td>0.01</td> <td>0.02</td> <td>2.1</td>
+                    </tr>
+                    <tr>
+                         <td>rich-query-submit</td> <td>42</td> <td>0</td> <td>2.1</td> <td>2.10</td> <td>0.09</td> <td>1.37</td> <td>2.0</td>
+                    </tr>
+                    <tr>
+                         <td>range-query-evaluate</td> <td>42</td> <td>0</td> <td>2.1</td> <td>0.04</td> <td>0.01</td> <td>0.03</td> <td>2.1</td>
+                    </tr>
+                    <tr>
+                         <td>range-query-submit</td> <td>42</td> <td>0</td> <td>2.1</td> <td>2.13</td> <td>0.10</td> <td>1.15</td> <td>2.1</td>
+                    </tr>
+                    <tr>
+                         <td>read-write-assets-previously-read-100</td> <td>2</td> <td>0</td> <td>2000.0</td> <td>2.12</td> <td>2.12</td> <td>2.12</td> <td>0.9</td>
+                    </tr>
+                    <tr>
+                         <td>read-write-assets-not-previously-read-100</td> <td>3</td> <td>1</td> <td>4.0</td> <td>2.10</td> <td>1.09</td> <td>1.76</td> <td>1.9</td>
+                    </tr>
+                    <tr>
+                         <td>read-write-assets-random-100</td> <td>4</td> <td>0</td> <td>4.0</td> <td>2.12</td> <td>1.11</td> <td>1.62</td> <td>1.9</td>
+                    </tr>
+                    <tr>
+                         <td>delete-asset-100</td> <td>20</td> <td>0</td> <td>2.2</td> <td>2.11</td> <td>0.06</td> <td>1.17</td> <td>1.8</td>
+                    </tr>
+                    <tr>
+                         <td>delete-asset-batch-10-100</td> <td>20</td> <td>0</td> <td>9.7</td> <td>1.76</td> <td>0.13</td> <td>0.54</td> <td>9.1</td>
+                    </tr>
+                </table>
+            </div>
+            <div style="border-bottom: 1px solid #d9d9d9; padding-bottom: 10px;" id="empty-contract-evaluate">
+                <h2>Benchmark round: empty-contract-evaluate</h2>
+                <p></p>
+                <pre style="overflow: visible;white-space: pre-wrap;max-height:100%;">txDuration: 20
+rateControl:
+  type: fixed-rate
+  opts:
+    tps: 2
+</pre>
+                        <h3>Performance metrics for empty-contract-evaluate</h3>
+                            <table style="min-width: 100%;">
+                                <tr>
+                                     <th>Name</th> <th>Succ</th> <th>Fail</th> <th>Send Rate (TPS)</th> <th>Max Latency (s)</th> <th>Min Latency (s)</th> <th>Avg Latency (s)</th> <th>Throughput (TPS)</th>
+                                </tr>
+                                <tr>
+                                     <td>empty-contract-evaluate</td> <td>42</td> <td>0</td> <td>2.1</td> <td>0.03</td> <td>0.00</td> <td>0.01</td> <td>2.1</td>
+                                </tr>
+                            </table>
+                        <h3>Resource utilization for empty-contract-evaluate</h3>
+            </div>
+
+            <div style="border-bottom: 1px solid #d9d9d9; padding-bottom: 10px;" id="empty-contract-submit">
+                <h2>Benchmark round: empty-contract-submit</h2>
+                <p></p>
+                <pre style="overflow: visible;white-space: pre-wrap;max-height:100%;">txDuration: 20
+rateControl:
+  type: fixed-rate
+  opts:
+    tps: 2
+</pre>
+                        <h3>Performance metrics for empty-contract-submit</h3>
+                            <table style="min-width: 100%;">
+                                <tr>
+                                     <th>Name</th> <th>Succ</th> <th>Fail</th> <th>Send Rate (TPS)</th> <th>Max Latency (s)</th> <th>Min Latency (s)</th> <th>Avg Latency (s)</th> <th>Throughput (TPS)</th>
+                                </tr>
+                                <tr>
+                                     <td>empty-contract-submit</td> <td>42</td> <td>0</td> <td>2.1</td> <td>2.10</td> <td>0.07</td> <td>1.27</td> <td>1.9</td>
+                                </tr>
+                            </table>
+                        <h3>Resource utilization for empty-contract-submit</h3>
+            </div>
+
+            <div style="border-bottom: 1px solid #d9d9d9; padding-bottom: 10px;" id="create-asset-1000">
+                <h2>Benchmark round: create-asset-1000</h2>
+                <p></p>
+                <pre style="overflow: visible;white-space: pre-wrap;max-height:100%;">txDuration: 20
+rateControl:
+  type: fixed-rate
+  opts:
+    tps: 2
+</pre>
+                        <h3>Performance metrics for create-asset-1000</h3>
+                            <table style="min-width: 100%;">
+                                <tr>
+                                     <th>Name</th> <th>Succ</th> <th>Fail</th> <th>Send Rate (TPS)</th> <th>Max Latency (s)</th> <th>Min Latency (s)</th> <th>Avg Latency (s)</th> <th>Throughput (TPS)</th>
+                                </tr>
+                                <tr>
+                                     <td>create-asset-1000</td> <td>42</td> <td>0</td> <td>2.1</td> <td>2.12</td> <td>0.09</td> <td>1.34</td> <td>2.0</td>
+                                </tr>
+                            </table>
+                        <h3>Resource utilization for create-asset-1000</h3>
+            </div>
+
+            <div style="border-bottom: 1px solid #d9d9d9; padding-bottom: 10px;" id="get-asset-evaluate-100">
+                <h2>Benchmark round: get-asset-evaluate-100</h2>
+                <p></p>
+                <pre style="overflow: visible;white-space: pre-wrap;max-height:100%;">txDuration: 20
+rateControl:
+  type: fixed-rate
+  opts:
+    tps: 2
+</pre>
+                        <h3>Performance metrics for get-asset-evaluate-100</h3>
+                            <table style="min-width: 100%;">
+                                <tr>
+                                     <th>Name</th> <th>Succ</th> <th>Fail</th> <th>Send Rate (TPS)</th> <th>Max Latency (s)</th> <th>Min Latency (s)</th> <th>Avg Latency (s)</th> <th>Throughput (TPS)</th>
+                                </tr>
+                                <tr>
+                                     <td>get-asset-evaluate-100</td> <td>42</td> <td>0</td> <td>2.1</td> <td>0.03</td> <td>0.00</td> <td>0.02</td> <td>2.1</td>
+                                </tr>
+                            </table>
+                        <h3>Resource utilization for get-asset-evaluate-100</h3>
+            </div>
+
+            <div style="border-bottom: 1px solid #d9d9d9; padding-bottom: 10px;" id="get-asset-submit-200">
+                <h2>Benchmark round: get-asset-submit-200</h2>
+                <p></p>
+                <pre style="overflow: visible;white-space: pre-wrap;max-height:100%;">txDuration: 20
+rateControl:
+  type: fixed-rate
+  opts:
+    tps: 2
+</pre>
+                        <h3>Performance metrics for get-asset-submit-200</h3>
+                            <table style="min-width: 100%;">
+                                <tr>
+                                     <th>Name</th> <th>Succ</th> <th>Fail</th> <th>Send Rate (TPS)</th> <th>Max Latency (s)</th> <th>Min Latency (s)</th> <th>Avg Latency (s)</th> <th>Throughput (TPS)</th>
+                                </tr>
+                                <tr>
+                                     <td>get-asset-submit-200</td> <td>42</td> <td>0</td> <td>2.1</td> <td>2.11</td> <td>0.09</td> <td>1.33</td> <td>1.9</td>
+                                </tr>
+                            </table>
+                        <h3>Resource utilization for get-asset-submit-200</h3>
+            </div>
+
+            <div style="border-bottom: 1px solid #d9d9d9; padding-bottom: 10px;" id="rich-query-evaluate">
+                <h2>Benchmark round: rich-query-evaluate</h2>
+                <p></p>
+                <pre style="overflow: visible;white-space: pre-wrap;max-height:100%;">txDuration: 20
+rateControl:
+  type: fixed-rate
+  opts:
+    tps: 2
+</pre>
+                        <h3>Performance metrics for rich-query-evaluate</h3>
+                            <table style="min-width: 100%;">
+                                <tr>
+                                     <th>Name</th> <th>Succ</th> <th>Fail</th> <th>Send Rate (TPS)</th> <th>Max Latency (s)</th> <th>Min Latency (s)</th> <th>Avg Latency (s)</th> <th>Throughput (TPS)</th>
+                                </tr>
+                                <tr>
+                                     <td>rich-query-evaluate</td> <td>42</td> <td>0</td> <td>2.1</td> <td>0.05</td> <td>0.01</td> <td>0.02</td> <td>2.1</td>
+                                </tr>
+                            </table>
+                        <h3>Resource utilization for rich-query-evaluate</h3>
+            </div>
+
+            <div style="border-bottom: 1px solid #d9d9d9; padding-bottom: 10px;" id="rich-query-submit">
+                <h2>Benchmark round: rich-query-submit</h2>
+                <p></p>
+                <pre style="overflow: visible;white-space: pre-wrap;max-height:100%;">txDuration: 20
+rateControl:
+  type: fixed-rate
+  opts:
+    tps: 2
+</pre>
+                        <h3>Performance metrics for rich-query-submit</h3>
+                            <table style="min-width: 100%;">
+                                <tr>
+                                     <th>Name</th> <th>Succ</th> <th>Fail</th> <th>Send Rate (TPS)</th> <th>Max Latency (s)</th> <th>Min Latency (s)</th> <th>Avg Latency (s)</th> <th>Throughput (TPS)</th>
+                                </tr>
+                                <tr>
+                                     <td>rich-query-submit</td> <td>42</td> <td>0</td> <td>2.1</td> <td>2.10</td> <td>0.09</td> <td>1.37</td> <td>2.0</td>
+                                </tr>
+                            </table>
+                        <h3>Resource utilization for rich-query-submit</h3>
+            </div>
+
+            <div style="border-bottom: 1px solid #d9d9d9; padding-bottom: 10px;" id="range-query-evaluate">
+                <h2>Benchmark round: range-query-evaluate</h2>
+                <p></p>
+                <pre style="overflow: visible;white-space: pre-wrap;max-height:100%;">txDuration: 20
+rateControl:
+  type: fixed-rate
+  opts:
+    tps: 2
+</pre>
+                        <h3>Performance metrics for range-query-evaluate</h3>
+                            <table style="min-width: 100%;">
+                                <tr>
+                                     <th>Name</th> <th>Succ</th> <th>Fail</th> <th>Send Rate (TPS)</th> <th>Max Latency (s)</th> <th>Min Latency (s)</th> <th>Avg Latency (s)</th> <th>Throughput (TPS)</th>
+                                </tr>
+                                <tr>
+                                     <td>range-query-evaluate</td> <td>42</td> <td>0</td> <td>2.1</td> <td>0.04</td> <td>0.01</td> <td>0.03</td> <td>2.1</td>
+                                </tr>
+                            </table>
+                        <h3>Resource utilization for range-query-evaluate</h3>
+            </div>
+
+            <div style="border-bottom: 1px solid #d9d9d9; padding-bottom: 10px;" id="range-query-submit">
+                <h2>Benchmark round: range-query-submit</h2>
+                <p></p>
+                <pre style="overflow: visible;white-space: pre-wrap;max-height:100%;">txDuration: 20
+rateControl:
+  type: fixed-rate
+  opts:
+    tps: 2
+</pre>
+                        <h3>Performance metrics for range-query-submit</h3>
+                            <table style="min-width: 100%;">
+                                <tr>
+                                     <th>Name</th> <th>Succ</th> <th>Fail</th> <th>Send Rate (TPS)</th> <th>Max Latency (s)</th> <th>Min Latency (s)</th> <th>Avg Latency (s)</th> <th>Throughput (TPS)</th>
+                                </tr>
+                                <tr>
+                                     <td>range-query-submit</td> <td>42</td> <td>0</td> <td>2.1</td> <td>2.13</td> <td>0.10</td> <td>1.15</td> <td>2.1</td>
+                                </tr>
+                            </table>
+                        <h3>Resource utilization for range-query-submit</h3>
+            </div>
+
+            <div style="border-bottom: 1px solid #d9d9d9; padding-bottom: 10px;" id="read-write-assets-previously-read-100">
+                <h2>Benchmark round: read-write-assets-previously-read-100</h2>
+                <p>Test a submitTransaction() Gateway method against &#x60;fixed-asset&#x60; Smart Contract method named &#x60;ReadWriteAssets&#x60;. This method reads a specified number of keys for assets of size 100 bytes and write to the assets that have been read.</p>
+                <pre style="overflow: visible;white-space: pre-wrap;max-height:100%;">rateControl:
+  type: fixed-rate
+  opts:
+    tps: 2
+</pre>
+                        <h3>Performance metrics for read-write-assets-previously-read-100</h3>
+                            <table style="min-width: 100%;">
+                                <tr>
+                                     <th>Name</th> <th>Succ</th> <th>Fail</th> <th>Send Rate (TPS)</th> <th>Max Latency (s)</th> <th>Min Latency (s)</th> <th>Avg Latency (s)</th> <th>Throughput (TPS)</th>
+                                </tr>
+                                <tr>
+                                     <td>read-write-assets-previously-read-100</td> <td>2</td> <td>0</td> <td>2000.0</td> <td>2.12</td> <td>2.12</td> <td>2.12</td> <td>0.9</td>
+                                </tr>
+                            </table>
+                        <h3>Resource utilization for read-write-assets-previously-read-100</h3>
+            </div>
+
+            <div style="border-bottom: 1px solid #d9d9d9; padding-bottom: 10px;" id="read-write-assets-not-previously-read-100">
+                <h2>Benchmark round: read-write-assets-not-previously-read-100</h2>
+                <p>Test a submitTransaction() Gateway method against the &#x60;fixed-asset&#x60; Smart Contract method named &#x60;ReadWriteAssets&#x60;. This method reads and writes a specified number of keys for assets of size 100 bytes. The write keys set will never be any of the read keys.  The contract will never write to the keys that were read.</p>
+                <pre style="overflow: visible;white-space: pre-wrap;max-height:100%;">rateControl:
+  type: fixed-rate
+  opts:
+    tps: 2
+</pre>
+                        <h3>Performance metrics for read-write-assets-not-previously-read-100</h3>
+                            <table style="min-width: 100%;">
+                                <tr>
+                                     <th>Name</th> <th>Succ</th> <th>Fail</th> <th>Send Rate (TPS)</th> <th>Max Latency (s)</th> <th>Min Latency (s)</th> <th>Avg Latency (s)</th> <th>Throughput (TPS)</th>
+                                </tr>
+                                <tr>
+                                     <td>read-write-assets-not-previously-read-100</td> <td>3</td> <td>1</td> <td>4.0</td> <td>2.10</td> <td>1.09</td> <td>1.76</td> <td>1.9</td>
+                                </tr>
+                            </table>
+                        <h3>Resource utilization for read-write-assets-not-previously-read-100</h3>
+            </div>
+
+            <div style="border-bottom: 1px solid #d9d9d9; padding-bottom: 10px;" id="read-write-assets-random-100">
+                <h2>Benchmark round: read-write-assets-random-100</h2>
+                <p>Test a submitTransaction() Gateway method against the &#x60;fixed-asset&#x60; Smart Contract method named &#x60;ReadWriteAssets&#x60;. This method reads and writes a specified number of keys for assets of size 100 bytes. The write keys set will be random so may or may not have been previously read</p>
+                <pre style="overflow: visible;white-space: pre-wrap;max-height:100%;">rateControl:
+  type: fixed-rate
+  opts:
+    tps: 2
+</pre>
+                        <h3>Performance metrics for read-write-assets-random-100</h3>
+                            <table style="min-width: 100%;">
+                                <tr>
+                                     <th>Name</th> <th>Succ</th> <th>Fail</th> <th>Send Rate (TPS)</th> <th>Max Latency (s)</th> <th>Min Latency (s)</th> <th>Avg Latency (s)</th> <th>Throughput (TPS)</th>
+                                </tr>
+                                <tr>
+                                     <td>read-write-assets-random-100</td> <td>4</td> <td>0</td> <td>4.0</td> <td>2.12</td> <td>1.11</td> <td>1.62</td> <td>1.9</td>
+                                </tr>
+                            </table>
+                        <h3>Resource utilization for read-write-assets-random-100</h3>
+            </div>
+
+            <div style="border-bottom: 1px solid #d9d9d9; padding-bottom: 10px;" id="delete-asset-100">
+                <h2>Benchmark round: delete-asset-100</h2>
+                <p>Test a submitTransaction() Gateway method against the &#x60;fixed-asset&#x60; Smart Contract method named &#x60;deleteAsset&#x60;. This method performs a deleteState on an item that matches an asset of size 100 bytes.</p>
+                <pre style="overflow: visible;white-space: pre-wrap;max-height:100%;">rateControl:
+  type: fixed-rate
+  opts:
+    tps: 2
+</pre>
+                        <h3>Performance metrics for delete-asset-100</h3>
+                            <table style="min-width: 100%;">
+                                <tr>
+                                     <th>Name</th> <th>Succ</th> <th>Fail</th> <th>Send Rate (TPS)</th> <th>Max Latency (s)</th> <th>Min Latency (s)</th> <th>Avg Latency (s)</th> <th>Throughput (TPS)</th>
+                                </tr>
+                                <tr>
+                                     <td>delete-asset-100</td> <td>20</td> <td>0</td> <td>2.2</td> <td>2.11</td> <td>0.06</td> <td>1.17</td> <td>1.8</td>
+                                </tr>
+                            </table>
+                        <h3>Resource utilization for delete-asset-100</h3>
+            </div>
+
+            <div style="border-bottom: 1px solid #d9d9d9; padding-bottom: 10px;" id="delete-asset-batch-10-100">
+                <h2>Benchmark round: delete-asset-batch-10-100</h2>
+                <p>Test a submitTransaction() Gateway method against the NodeJS &#x60;fixed-asset&#x60; Smart Contract method named &#x60;deleteAssetsFromBatch&#x60;. This method performs a deleteState on a batch of 10 UUIDs that each match an asset of size 8000 bytes.</p>
+                <pre style="overflow: visible;white-space: pre-wrap;max-height:100%;">rateControl:
+  type: fixed-load
+  opts:
+    transactionLoad: 20
+    startingTps: 10
+</pre>
+                        <h3>Performance metrics for delete-asset-batch-10-100</h3>
+                            <table style="min-width: 100%;">
+                                <tr>
+                                     <th>Name</th> <th>Succ</th> <th>Fail</th> <th>Send Rate (TPS)</th> <th>Max Latency (s)</th> <th>Min Latency (s)</th> <th>Avg Latency (s)</th> <th>Throughput (TPS)</th>
+                                </tr>
+                                <tr>
+                                     <td>delete-asset-batch-10-100</td> <td>20</td> <td>0</td> <td>9.7</td> <td>1.76</td> <td>0.13</td> <td>0.54</td> <td>9.1</td>
+                                </tr>
+                            </table>
+                        <h3>Resource utilization for delete-asset-batch-10-100</h3>
+            </div>
+
+            <div style="border-bottom: 1px solid #d9d9d9; padding-bottom: 10px;">
+                <h2>Test Environment</h2>
+                <h3>benchmark config</h3>
+                <pre id="benchmarkInfo" style="overflow: visible;white-space: pre-wrap;max-height:100%;">name: fixed-asset-test
+description: This is a test yaml for the existing fixed-asset benchmarks
+workers:
+  number: 2
+rounds:
+  - label: empty-contract-evaluate
+    chaincodeID: fixed-asset
+    txDuration: 20
+    rateControl:
+      type: fixed-rate
+      opts:
+        tps: 2
+    workload:
+      module: benchmarks&#x2F;api&#x2F;fabric&#x2F;workloads&#x2F;empty-contract.js
+      arguments:
+        chaincodeID: fixed-asset
+        consensus: false
+  - label: empty-contract-submit
+    chaincodeID: fixed-asset
+    txDuration: 20
+    rateControl:
+      type: fixed-rate
+      opts:
+        tps: 2
+    workload:
+      module: benchmarks&#x2F;api&#x2F;fabric&#x2F;workloads&#x2F;empty-contract.js
+      arguments:
+        chaincodeID: fixed-asset
+        consensus: true
+  - label: create-asset-1000
+    chaincodeID: fixed-asset
+    txDuration: 20
+    rateControl:
+      type: fixed-rate
+      opts:
+        tps: 2
+    workload:
+      module: benchmarks&#x2F;api&#x2F;fabric&#x2F;workloads&#x2F;create-asset.js
+      arguments:
+        chaincodeID: fixed-asset
+        byteSize: 1000
+  - label: get-asset-evaluate-100
+    chaincodeID: fixed-asset
+    txDuration: 20
+    rateControl:
+      type: fixed-rate
+      opts:
+        tps: 2
+    workload:
+      module: benchmarks&#x2F;api&#x2F;fabric&#x2F;workloads&#x2F;get-asset.js
+      arguments:
+        chaincodeID: fixed-asset
+        create_sizes:
+          - 100
+        byteSize: 100
+        assets: 20
+        consensus: false
+  - label: get-asset-submit-200
+    chaincodeID: fixed-asset
+    txDuration: 20
+    rateControl:
+      type: fixed-rate
+      opts:
+        tps: 2
+    workload:
+      module: benchmarks&#x2F;api&#x2F;fabric&#x2F;workloads&#x2F;get-asset.js
+      arguments:
+        chaincodeID: fixed-asset
+        create_sizes:
+          - 200
+        byteSize: 200
+        assets: 20
+        consensus: true
+  - label: rich-query-evaluate
+    chaincodeID: fixed-asset
+    txDuration: 20
+    rateControl:
+      type: fixed-rate
+      opts:
+        tps: 2
+    workload:
+      module: benchmarks&#x2F;api&#x2F;fabric&#x2F;workloads&#x2F;rich-query-asset.js
+      arguments:
+        chaincodeID: fixed-asset
+        byteSize: 1000
+        pagesize: &#39;2&#39;
+        noSetup: true
+        nomatch: true
+        consensus: false
+  - label: rich-query-submit
+    chaincodeID: fixed-asset
+    txDuration: 20
+    rateControl:
+      type: fixed-rate
+      opts:
+        tps: 2
+    workload:
+      module: benchmarks&#x2F;api&#x2F;fabric&#x2F;workloads&#x2F;rich-query-asset.js
+      arguments:
+        chaincodeID: fixed-asset
+        byteSize: 1000
+        pagesize: &#39;5&#39;
+        noSetup: true
+        nomatch: true
+        consensus: true
+  - label: range-query-evaluate
+    chaincodeID: fixed-asset
+    txDuration: 20
+    rateControl:
+      type: fixed-rate
+      opts:
+        tps: 2
+    workload:
+      module: benchmarks&#x2F;api&#x2F;fabric&#x2F;workloads&#x2F;range-query-asset.js
+      arguments:
+        chaincodeID: fixed-asset
+        byteSize: 1000
+        range: 200
+        offset: 100
+        noSetup: true
+        pagesize: &#39;5&#39;
+        nomatch: true
+        consensus: false
+  - label: range-query-submit
+    chaincodeID: fixed-asset
+    txDuration: 20
+    rateControl:
+      type: fixed-rate
+      opts:
+        tps: 2
+    workload:
+      module: benchmarks&#x2F;api&#x2F;fabric&#x2F;workloads&#x2F;range-query-asset.js
+      arguments:
+        chaincodeID: fixed-asset
+        byteSize: 1000
+        range: 200
+        offset: 100
+        noSetup: true
+        pagesize: &#39;5&#39;
+        nomatch: true
+        consensus: true
+  - label: read-write-assets-previously-read-100
+    description: &gt;-
+      Test a submitTransaction() Gateway method against &#x60;fixed-asset&#x60; Smart
+      Contract method named &#x60;ReadWriteAssets&#x60;. This method reads a specified
+      number of keys for assets of size 100 bytes and write to the assets that
+      have been read.
+    chaincodeID: fixed-asset
+    txNumber: 2
+    rateControl:
+      type: fixed-rate
+      opts:
+        tps: 2
+    workload:
+      module: benchmarks&#x2F;api&#x2F;fabric&#x2F;workloads&#x2F;read-write-assets&#x2F;read-write-assets.js
+      arguments:
+        chaincodeID: fixed-asset
+        assets: 20
+        byteSize: 100
+        readCount: 2
+        write:
+          count: 2
+          writeMode: allread
+  - label: read-write-assets-not-previously-read-100
+    description: &gt;-
+      Test a submitTransaction() Gateway method against the &#x60;fixed-asset&#x60; Smart
+      Contract method named &#x60;ReadWriteAssets&#x60;. This method reads and writes a
+      specified number of keys for assets of size 100 bytes. The write keys set
+      will never be any of the read keys.  The contract will never write to the
+      keys that were read.
+    chaincodeID: fixed-asset
+    txNumber: 5
+    rateControl:
+      type: fixed-rate
+      opts:
+        tps: 2
+    workload:
+      module: benchmarks&#x2F;api&#x2F;fabric&#x2F;workloads&#x2F;read-write-assets&#x2F;read-write-assets.js
+      arguments:
+        chaincodeID: fixed-asset
+        assets: 20
+        byteSize: 100
+        readCount: 2
+        write:
+          count: 2
+          writeMode: notread
+  - label: read-write-assets-random-100
+    description: &gt;-
+      Test a submitTransaction() Gateway method against the &#x60;fixed-asset&#x60; Smart
+      Contract method named &#x60;ReadWriteAssets&#x60;. This method reads and writes a
+      specified number of keys for assets of size 100 bytes. The write keys set
+      will be random so may or may not have been previously read
+    chaincodeID: fixed-asset
+    txNumber: 5
+    rateControl:
+      type: fixed-rate
+      opts:
+        tps: 2
+    workload:
+      module: benchmarks&#x2F;api&#x2F;fabric&#x2F;workloads&#x2F;read-write-assets&#x2F;read-write-assets.js
+      arguments:
+        chaincodeID: fixed-asset
+        assets: 20
+        byteSize: 100
+        readCount: 2
+        write:
+          count: 2
+          writeMode: random
+  - label: delete-asset-100
+    description: &gt;-
+      Test a submitTransaction() Gateway method against the &#x60;fixed-asset&#x60; Smart
+      Contract method named &#x60;deleteAsset&#x60;. This method performs a deleteState on
+      an item that matches an asset of size 100 bytes.
+    chaincodeID: fixed-asset
+    txNumber: 20
+    rateControl:
+      type: fixed-rate
+      opts:
+        tps: 2
+    workload:
+      module: benchmarks&#x2F;api&#x2F;fabric&#x2F;workloads&#x2F;delete-asset.js
+      arguments:
+        chaincodeID: fixed-asset
+        create_sizes:
+          - 100
+        assets: 20
+        byteSize: 100
+        consensus: true
+  - label: delete-asset-batch-10-100
+    description: &gt;-
+      Test a submitTransaction() Gateway method against the NodeJS &#x60;fixed-asset&#x60;
+      Smart Contract method named &#x60;deleteAssetsFromBatch&#x60;. This method performs
+      a deleteState on a batch of 10 UUIDs that each match an asset of size 8000
+      bytes.
+    chaincodeID: fixed-asset
+    txNumber: 20
+    rateControl:
+      type: fixed-load
+      opts:
+        transactionLoad: 20
+        startingTps: 10
+    workload:
+      module: benchmarks&#x2F;api&#x2F;fabric&#x2F;workloads&#x2F;batch-delete-asset.js
+      arguments:
+        chaincodeID: fixed-asset
+        create_sizes:
+          - 100
+        assets: 200
+        byteSize: 100
+        batchSize: 10
+        consensus: true
+</pre>
+                <h3>SUT</h3>
+                <pre id="sutdetails">not provided</pre>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
